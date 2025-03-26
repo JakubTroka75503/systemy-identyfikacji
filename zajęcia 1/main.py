@@ -2,13 +2,17 @@ import hashlib
 import os
 import pyotp
 import base64
+import qrcode
+
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+
 def verify_password(stored_hash, entered_password):
     entered_hash = hash_password(entered_password)
     return stored_hash == entered_hash
+
 
 def load_users(filename="users.txt"):
     users = {}
@@ -24,6 +28,7 @@ def load_users(filename="users.txt"):
                     users[username] = {"password": hashed_password, "secret": secret}
     return users
 
+
 def save_users(users, filename="users.txt"):
     with open(filename, "w") as f:
         for username, user_data in users.items():
@@ -32,7 +37,9 @@ def save_users(users, filename="users.txt"):
             else:
                 f.write(f"{username}:{user_data['password']}\n")
 
+
 users = load_users()
+
 
 def register():
     username = input("Username: ")
@@ -46,14 +53,21 @@ def register():
     print("Registration successful!")
     enable_2fa(username)
 
+
 def enable_2fa(username):
     secret = base64.b32encode(os.urandom(16)).decode('utf-8')
     users[username]["secret"] = secret
     save_users(users)
     totp = pyotp.TOTP(secret)
-    print(f"2FA secret: {secret}")
-    print(f"QR code URL (scan with Google Authenticator or similar): {totp.provisioning_uri(name=username)}") # usunięto issuer
-    print("Please scan the QR code with your authenticator app.")
+
+    uri = totp.provisioning_uri(name=username)
+    print(f"\n2FA Secret: {secret}")
+    print("Scan this QR code with Google Authenticator or similar app:")
+
+    # Generowanie i wyświetlanie kodu QR
+    qr = qrcode.make(uri)
+    qr.show()
+
 
 def verify_2fa(username):
     secret = users[username]["secret"]
@@ -62,6 +76,7 @@ def verify_2fa(username):
     totp = pyotp.TOTP(secret)
     otp = input("Enter 2FA code: ")
     return totp.verify(otp)
+
 
 def login():
     username = input("Username: ")
@@ -74,6 +89,7 @@ def login():
             print("2FA verification failed.")
     else:
         print("Login failed.")
+
 
 choice = input("Login (L) or Register (R)? ").upper()
 if choice == "R":
