@@ -91,7 +91,7 @@ def analyze_behavior(username, behavioral_data):
     mouse_diff = abs(mouse_movements_sum - sum(behavioral_data["mouse_movements"]))
 
     # Zwiększona tolerancja na różnice sum
-    tolerance = 10  # Bardzo duża tolerancja różnicy sumy czasów
+    tolerance = 0.3  # Bardzo duża tolerancja różnicy sumy czasów
     return key_diff < tolerance and mouse_diff < tolerance
 
 
